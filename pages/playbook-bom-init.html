@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+  iProduct UI 系统化升级 — playbook-bom-init.html
+  核心变更点（便于 review）：
+  1. 设计令牌升级：新增柔和阴影体系(xs~modal)、圆角(xs/xl/2xl)、
+     品牌 soft 背景、弹簧缓动 --ease-spring / 平滑 --ease-smooth；
+     暗色 bg-secondary #0d0d0d、bg-tertiary #181818；
+     亮色 bg-secondary #ffffff、bg-tertiary #f7f7f8。
+  2. 组件系统化：新增 .btn-primary/.btn-ghost/.btn-quiet、
+     .input、.card-dropdown/.dropdown-item、.action-chip 等类，
+     统一视觉语言（与 playbook-landing.html 一致）。
+  3. 内联 onmouseover/onmouseout 悬停逻辑改为 CSS :hover，
+     保留全部 id / onclick / 功能 JS（toggleCardMenu 等）。
+  4. 微交互：卡片"更多"按钮弹簧显隐、搜索浮层弹簧入场、
+     全局滚动条美化、:focus-visible 焦点环、主内容区氛围光晕、
+     hero 输入框聚焦高亮。
+  5. 细节：分隔线改用 border-subtle、SVG 装饰图标统一 stroke-width。
+  ============================================================
+-->
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <script id="theme-init">/* FOUC guard: apply saved theme before first paint */(function(){try{if(localStorage.getItem('iproduct-theme')==='dark'){var d=document.documentElement;d.setAttribute('data-theme','dark');d.style.colorScheme='dark';}}catch(e){}})();</script>
+<script id="theme-anim">/* smooth theme switch: transient transition on data-theme change */(function(){try{var h=document.documentElement;var mq=window.matchMedia('(prefers-reduced-motion: no-preference)');var t;new MutationObserver(function(){if(!mq.matches)return;h.classList.add('theme-anim');clearTimeout(t);t=setTimeout(function(){h.classList.remove('theme-anim');},340);}).observe(h,{attributes:true,attributeFilter:['data-theme']});}catch(e){}})();</script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iProduct - BOM Builder</title>
+    <style id="playbook-linear-override">
+      /* ===== Linear design system (light default + dark toggle) ===== */
+      :root {
+        /* === Base layout tokens (typography / spacing / easing / z-index) — single source === */
+        --font-size-2xs: 11px;
+        --font-size-xs: 12px;
+        --font-size-sm: 14px;
+        --font-size-base: 15px;
+        --font-size-md: 16px;
+        --font-size-lg: 18px;
+        --font-size-xl: 22px;
+        --font-size-2xl: 28px;
+        --font-size-3xl: 40px;
+
+        --font-weight-normal: 400;
+        --font-weight-medium: 500;
+        --font-weight-semibold: 600;
+        --font-weight-bold: 700;
+
+        --line-height-tight: 1.15;
+        --line-height-normal: 1.6;
+        --line-height-relaxed: 1.7;
+
+        --space-1: 4px;
+        --space-2: 8px;
+        --space-3: 12px;
+        --space-4: 16px;
+        --space-5: 20px;
+        --space-6: 24px;
+        --space-8: 32px;
+        --space-9: 36px;
+        --space-10: 40px;
+        --space-12: 48px;
+
+        --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+        --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+        --transition-fast: 150ms var(--ease-spring);
+        --transition-normal: 250ms var(--ease-spring);
+        --transition-slow: 400ms var(--ease-smooth);
+
+        --z-base: 0;
+        --z-dropdown: 100;
+        --z-sticky: 200;
+        --z-overlay: 300;
+        --z-modal: 400;
+        --z-toast: 500;
+
+        color-scheme: light;
+
+        /* Surfaces: canvas → surface-1..4 (daylight palette) */
+        --color-bg-primary: #f7f8fa;   /* canvas */
+        --color-bg-secondary: #ffffff; /* surface-1 (sidebar/cards) */
+        --color-bg-tertiary: #fbfbfd;  /* surface-2 */
+        --color-bg-elevated: #ffffff;  /* surface-3 */
+        --color-bg-hover: #f1f2f4;     /* surface-4 */
+        --color-bg-active: #e9ebef;
+
+        --color-border-default: #e6e7ea; /* hairline */
+        --color-border-subtle: #f0f1f3;
+        --color-border-emphasis: #d4d6db; /* hairline-strong */
+
+        --color-text-primary: #1c1d21;   /* ink */
+        --color-text-secondary: #5b606b; /* ink-muted */
+        --color-text-tertiary: #8a8f98;  /* ink-subtle */
+        --color-text-inverse: #ffffff;
+
+        /* Brand: Lavender-blue (single accent) */
+        --color-brand-primary: #5e6ad2;
+        --color-brand-primary-hover: #4f57c4;
+        --color-brand-primary-muted: #eceefb;
+        --color-brand-primary-subtle: #e3e6f7;
+        --color-brand-primary-soft: rgba(94, 106, 210, 0.10);
+
+        /* Semantic (restrained but usable) */
+        --state-success: #18794e;
+        --state-success-muted: rgba(24, 121, 78, 0.12);
+        --state-warning: #9a6700;
+        --state-warning-muted: rgba(154, 103, 0, 0.12);
+        --state-error: #c5362c;
+        --state-error-muted: rgba(197, 54, 44, 0.12);
+        --state-info: #5e6ad2;
+        --state-info-muted: rgba(94, 106, 210, 0.12);
+
+        --color-accent-glow: rgba(94, 106, 210, 0); /* no atmospheric glow */
+
+        /* Type: Inter substitute for Linear Display/Text; JetBrains Mono */
+        --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', 'PingFang SC', sans-serif;
+        --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Menlo', monospace;
+
+        /* Radius: Linear scale */
+        --radius-xs: 4px;
+        --radius-sm: 6px;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --radius-xl: 16px;
+        --radius-2xl: 16px;
+        --radius-full: 9999px;
+
+        /* Depth: hairline + surface ladder, subtle light shadow */
+        --shadow-xs: 0 1px 1px rgba(0, 0, 0, 0.04);
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+        --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.08);
+        --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.10);
+        --shadow-float: 0 8px 24px rgba(0, 0, 0, 0.12);
+        --shadow-modal: 0 16px 48px rgba(0, 0, 0, 0.18);
+      }
+
+      [data-theme="dark"] {
+        color-scheme: dark;
+
+        /* Surfaces: canvas → surface-1..4 (Linear dark, candidate B) */
+        --color-bg-primary: #09090b;   /* canvas */
+        --color-bg-secondary: #131316; /* surface-1 */
+        --color-bg-tertiary: #1b1b20;  /* surface-2 */
+        --color-bg-elevated: #232329;  /* surface-3 */
+        --color-bg-hover: #2a2a31;     /* surface-4 */
+        --color-bg-active: #33333c;
+
+        --color-border-default: rgba(255, 255, 255, 0.10); /* hairline */
+        --color-border-subtle: rgba(255, 255, 255, 0.06);
+        --color-border-emphasis: rgba(255, 255, 255, 0.16); /* hairline-strong */
+
+        --color-text-primary: #f7f8f8;   /* ink */
+        --color-text-secondary: #c9cdd6; /* ink-muted */
+        --color-text-tertiary: #8a8f98;  /* ink-subtle */
+        --color-text-inverse: #09090b;
+
+        /* Brand: Lavender-blue (scarce accent, lightened for AA on dark) */
+        --color-brand-primary: #8b93ee;
+        --color-brand-primary-hover: #a5abf5;
+        --color-brand-primary-muted: #1b1c2e;
+        --color-brand-primary-subtle: #15161f;
+        --color-brand-primary-soft: rgba(139, 147, 238, 0.14);
+
+        /* Semantic (hue restored) */
+        --state-success: #3fb950;
+        --state-success-muted: rgba(63, 185, 80, 0.16);
+        --state-warning: #e3b341;
+        --state-warning-muted: rgba(227, 179, 65, 0.14);
+        --state-error: #f85149;
+        --state-error-muted: rgba(248, 81, 73, 0.14);
+        --state-info: #58a6ff;
+        --state-info-muted: rgba(88, 166, 255, 0.14);
+
+        --color-accent-glow: rgba(139, 147, 238, 0);
+
+        --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', 'PingFang SC', sans-serif;
+        --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Menlo', monospace;
+
+        --radius-xs: 4px;
+        --radius-sm: 6px;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --radius-xl: 16px;
+        --radius-2xl: 16px;
+        --radius-full: 9999px;
+
+        --shadow-xs: 0 1px 1px rgba(0, 0, 0, 0.3);
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+        --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.4);
+        --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.45);
+        --shadow-float: 0 8px 24px rgba(0, 0, 0, 0.5);
+        --shadow-modal: 0 16px 48px rgba(0, 0, 0, 0.5);
+
+        /* P1 - halation weight callback (requires Inter variable axis) */
+        --font-weight-normal: 380;
+        --font-weight-medium: 480;
+        --font-weight-semibold: 580;
+        --font-weight-bold: 680;
+      }
+
+      /* ===== P1 dark-mode refinements (UI Designer) ===== */
+      /* Smooth theme switch: transient transitions only during toggle (reduced-motion safe) */
+      @media (prefers-reduced-motion: no-preference){
+        html.theme-anim, html.theme-anim * {
+          transition: background-color .3s var(--ease-smooth), border-color .3s var(--ease-smooth),
+                      color .3s var(--ease-smooth), box-shadow .3s var(--ease-smooth) !important;
+        }
+      }
+
+      /* Hover multi-signal + tonal 'lit edge' on elevated cards (dark only) */
+      [data-theme="dark"] .config-card:hover,
+      [data-theme="dark"] .template-card:hover,
+      [data-theme="dark"] .sk-card:hover {
+        box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      }
+
+      /* Sidebar hover signal: brighten the accent rail (multi-signal alongside bg) */
+      [data-theme="dark"] .sidebar-item { transition: background 0.2s var(--ease-spring), border-left-color 0.2s var(--ease-spring); }
+      [data-theme="dark"] .sidebar-item:hover { border-left-color: var(--color-border-emphasis); }
+
+      /* Dark breathing room: a touch more separation between stacked card rows */
+      [data-theme="dark"] .config-grid,
+      [data-theme="dark"] #skill-grid,
+      [data-theme="dark"] .skill-grid { gap: var(--space-3); }
+
+      /* High-contrast preference: strengthen borders + lift secondary text (dark) */
+      @media (prefers-contrast: more){
+        [data-theme="dark"] {
+          --color-border-default: rgba(255, 255, 255, 0.28);
+          --color-border-subtle: rgba(255, 255, 255, 0.2);
+          --color-border-emphasis: rgba(255, 255, 255, 0.45);
+          --color-text-secondary: #e7eaf0;
+          --color-text-tertiary: #b3b9c2;
+        }
+      }
+
+      /* Linear component adaptations (both modes) */
+      .ambient-glow { display: none !important; }
+      .page-title, h1, h2, h3 {
+        letter-spacing: -0.02em;
+        font-weight: var(--font-weight-semibold);
+      }
+      .sidebar-item.selected {
+        background: var(--color-brand-primary-soft);
+      }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  
+  @layer base {
+    body { background: var(--color-bg-primary); color: var(--color-text-primary); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style type="text/tailwindcss">
+@theme inline {
+    --color-background: var(--color-bg-primary);
+    --color-foreground: var(--color-text-primary);
+    --color-card: var(--color-bg-secondary);
+    --color-card-foreground: var(--color-text-primary);
+    --color-primary: var(--color-brand-primary);
+    --color-primary-foreground: #ffffff;
+    --color-border: var(--color-border-default);
+    --color-input: var(--color-border-default);
+    --color-ring: var(--color-brand-primary);
+    --color-muted: var(--color-bg-tertiary);
+    --color-muted-foreground: var(--color-text-secondary);
+    --color-destructive: var(--state-error);
+    --color-destructive-foreground: #ffffff;
+    --color-sidebar: var(--color-bg-secondary);
+    --color-sidebar-foreground: var(--color-text-primary);
+    --color-sidebar-primary: var(--color-brand-primary);
+    --color-sidebar-primary-foreground: #ffffff;
+    --color-sidebar-accent: var(--color-bg-hover);
+    --color-sidebar-accent-foreground: var(--color-text-primary);
+    --radius-sm: var(--radius-sm);
+    --radius-md: var(--radius-md);
+    --radius-lg: var(--radius-lg);
+}
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+
+      /* Utility Classes */
+      .font-sans { font-family: var(--font-sans); }
+      .font-mono { font-family: var(--font-mono); }
+      .text-primary { color: var(--color-text-primary); }
+      .text-secondary { color: var(--color-text-secondary); }
+      .text-tertiary { color: var(--color-text-tertiary); }
+      .text-brand { color: var(--color-brand-primary); }
+      .text-success { color: var(--state-success); }
+      .text-warning { color: var(--state-warning); }
+      .text-error { color: var(--state-error); }
+      .text-info { color: var(--state-info); }
+      .bg-primary { background-color: var(--color-bg-primary); }
+      .bg-secondary { background-color: var(--color-bg-secondary); }
+      .bg-tertiary { background-color: var(--color-bg-tertiary); }
+      .bg-elevated { background-color: var(--color-bg-elevated); }
+      .border-default { border-color: var(--color-border-default); }
+      .border-subtle { border-color: var(--color-border-subtle); }
+
+      html {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        font-feature-settings: 'kern' 1;
+      }
+      h1, h2, h3, h4, h5, h6 {
+        text-rendering: optimizeLegibility;
+      }
+
+      /* Vertical mode tabs */
+      .mode-tab {
+        display: flex; align-items: center; gap: var(--space-3); padding: var(--space-1) var(--space-2);
+        border: none; border-radius: var(--radius-sm); background: transparent;
+        font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); color: var(--color-text-tertiary);
+        cursor: pointer; text-align: left;
+        transition: background 0.2s var(--ease-spring), color 0.2s var(--ease-spring);
+      }
+      .mode-tab:hover:not(.active) { background: var(--color-bg-hover); color: var(--color-text-secondary); }
+      .mode-tab.active { background: var(--color-bg-hover); color: var(--color-text-secondary); cursor: default; }
+
+      /* Skill chip hover */
+      .skill-chip:hover { background: var(--color-brand-primary-muted); border-color: var(--color-brand-primary); color: var(--color-brand-primary); }
+
+      /* Skill grid card */
+      .skill-card:hover { background: var(--color-bg-hover); border-color: var(--color-border-default); }
+
+      /* Glow animation */
+      @keyframes glow-pulse {
+        0%, 100% { box-shadow: 0 0 0 0 var(--color-accent-glow); }
+        50% { box-shadow: 0 0 12px 4px var(--color-accent-glow); }
+      }
+
+      /* Optimization 3: Right panel clip-path + width combined transition */
+      /* Right panel: in normal flex flow (sibling of main-area) so main-area
+         shrinks when it opens → the 640px centered column re-centers within the
+         reduced space (adaptive). Toggle = classList.toggle('panel-closed');
+         width drives the animation (no inline width, so the class can override). */
+      #right-panel {
+        width: var(--right-panel-w); min-width: var(--right-panel-w);
+        transform: none;
+        opacity: 1;
+        transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-left-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+      }
+      #right-panel.panel-closed {
+        width: 0; min-width: 0;
+        border-left-width: 0;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      /* Left sidebar collapse */
+      #left-sidebar {
+        transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), clip-path 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+      }
+      #left-sidebar.sidebar-closed {
+        clip-path: inset(0 100% 0 0);
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      /* Collapsed toolbar (center column top-left) */
+      #collapsed-toolbar {
+        display: none;
+        border-bottom: 1px solid var(--color-border-default);
+        opacity: 0;
+        transform: translateY(-4px);
+        transition: opacity 0.2s ease, transform 0.2s ease;
+      }
+      #collapsed-toolbar.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* Search overlay */
+      #search-overlay {
+        display: none;
+        opacity: 0;
+        transition: opacity 0.15s ease;
+      }
+      #search-overlay.visible {
+        display: flex;
+        opacity: 1;
+      }
+    /* ============ iProduct Component System (升级) ============ */
+
+    /* Buttons */
+    .btn-primary {
+      display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+      padding: 8px 16px; border: none; border-radius: var(--radius-md);
+      background: var(--color-brand-primary); color: #fff;
+      font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); font-family: var(--font-sans);
+      cursor: pointer; white-space: nowrap;
+      transition: background 0.25s var(--ease-spring), transform 0.25s var(--ease-spring), box-shadow 0.25s var(--ease-spring);
+    }
+    .btn-primary:hover { background: var(--color-brand-primary-hover); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+    .btn-primary:active { transform: scale(0.97); }
+    .btn-primary.btn-sm { padding: 6px 14px; font-size: var(--font-size-xs); border-radius: var(--radius-full); }
+
+    .btn-ghost {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 8px 16px; border: 1px solid var(--color-border-default); border-radius: var(--radius-md);
+      background: transparent; color: var(--color-text-secondary);
+      font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); font-family: var(--font-sans);
+      cursor: pointer; white-space: nowrap;
+      transition: background 0.25s var(--ease-spring), border-color 0.25s var(--ease-spring), color 0.25s var(--ease-spring);
+    }
+    .btn-ghost:hover { background: var(--color-brand-primary-soft); border-color: var(--color-brand-primary); color: var(--color-brand-primary); }
+    .btn-ghost:active { transform: scale(0.97); }
+
+    .btn-quiet {
+      width: 28px; height: 28px;
+      display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+      border: none; background: transparent; color: var(--color-text-tertiary); cursor: pointer;
+      border-radius: var(--radius-sm);
+      transition: background 0.2s var(--ease-spring), color 0.2s var(--ease-spring);
+    }
+    .btn-quiet:hover { background: var(--color-bg-hover); color: var(--color-text-secondary); }
+    .btn-quiet:active { transform: scale(0.94); }
+    .btn-quiet.btn-lg { width: 32px; height: 32px; }
+
+    /* Template cards */
+    .template-card {
+      background: var(--color-bg-secondary); border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-xl); padding: var(--space-4); cursor: pointer;
+      display: flex; flex-direction: column; gap: var(--space-3);
+      transition: transform 0.3s var(--ease-spring), box-shadow 0.3s var(--ease-spring), border-color 0.3s var(--ease-spring), background 0.3s var(--ease-spring);
+    }
+    .template-card:hover {
+      background: var(--color-bg-hover); border-color: var(--color-border-default);
+      transform: translateY(-4px); box-shadow: var(--shadow-lg);
+    }
+
+    /* Inputs */
+    .input {
+      width: 100%; background: var(--color-bg-tertiary); border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-md); color: var(--color-text-primary);
+      font-size: var(--font-size-sm); font-family: var(--font-sans);
+      padding: var(--space-3) var(--space-4); outline: none;
+      transition: border-color 0.2s var(--ease-smooth), box-shadow 0.2s var(--ease-smooth);
+    }
+    .input:focus { border: 2px solid var(--color-brand-primary); box-shadow: 0 0 0 4px var(--color-brand-primary-soft); }
+
+    /* Sidebar card items + hover-reveal more button */
+    .sidebar-item { position: relative; padding: var(--space-3) var(--space-4); cursor: pointer; border-left: 3px solid transparent; background: transparent; transition: background 0.2s var(--ease-spring); }
+    .sidebar-item:hover { background: var(--color-bg-hover); }
+    .sidebar-item.selected { background: var(--color-brand-primary-muted); border-left-color: var(--color-brand-primary); }
+    .card-type-icon { color: var(--color-text-tertiary); transition: opacity 0.2s var(--ease-spring); }
+    .sidebar-item:hover .card-type-icon { opacity: 0; }
+    .card-more-btn {
+      position: absolute; left: 0; top: 0; width: 14px; height: 14px; border: none; background: transparent;
+      color: var(--color-text-tertiary); cursor: pointer; display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; padding: 0; transform: scale(0.8);
+      transition: opacity 0.2s var(--ease-spring), transform 0.2s var(--ease-spring), color 0.2s var(--ease-spring);
+    }
+    .card-more-btn:hover { color: var(--color-text-secondary); }
+    .sidebar-item:hover .card-more-btn { opacity: 1; transform: scale(1); pointer-events: auto; }
+
+    /* Dropdown menus */
+    .card-dropdown {
+      display: none; position: absolute; left: 0; top: 20px; z-index: 50; width: 110px;
+      background: var(--color-bg-elevated); border: 1px solid var(--color-border-default);
+      border-radius: var(--radius-lg); box-shadow: var(--shadow-float); overflow: hidden;
+      animation: dropdown-in 0.2s var(--ease-spring);
+    }
+    .card-dropdown.open { display: block; animation: dropdown-in 0.2s var(--ease-spring); }
+    @keyframes dropdown-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    .dropdown-item {
+      padding: var(--space-2) var(--space-3); font-size: var(--font-size-sm); color: var(--color-text-secondary);
+      font-family: var(--font-sans); cursor: pointer; border-left: 2px solid transparent;
+      transition: background 0.2s var(--ease-spring), color 0.2s var(--ease-spring), border-color 0.2s var(--ease-spring);
+    }
+    .dropdown-item:hover { background: var(--color-bg-hover); border-left-color: var(--color-brand-primary); color: var(--color-brand-primary); }
+    .dropdown-item.danger:hover { color: var(--state-error); border-left-color: var(--state-error); }
+
+    /* Filter tags */
+    .filter-tag {
+      display: inline-flex; align-items: center; gap: var(--space-1);
+      padding: var(--space-2) var(--space-3); border-radius: var(--radius-full);
+      border: 1px solid var(--color-border-default); background: transparent; color: var(--color-text-secondary);
+      font-size: var(--font-size-xs); font-weight: var(--font-weight-medium); font-family: var(--font-sans);
+      cursor: pointer; white-space: nowrap;
+      transition: all 0.25s var(--ease-smooth);
+    }
+    .filter-tag:hover:not(.active) { border-color: var(--color-border-emphasis); background: var(--color-bg-hover); }
+    .filter-tag.active { border-color: var(--color-brand-primary); background: var(--color-brand-primary); color: #fff; }
+
+    /* Search result items */
+    .search-result-item { padding: var(--space-3); display: flex; align-items: center; gap: var(--space-3); cursor: pointer; border-radius: var(--radius-sm); transition: background 0.2s var(--ease-spring); }
+    .search-result-item:hover { background: var(--color-bg-hover); }
+
+    /* Panel section header */
+    .panel-section-header:hover { background: var(--color-bg-hover); }
+
+    /* Page title */
+    .page-title { font-size: 26px; font-weight: var(--font-weight-bold); letter-spacing: -0.02em; color: var(--color-text-primary); font-family: var(--font-sans); margin: 0; }
+
+    /* Main area + ambient glow */
+    :root { --content-max-width: 640px; --right-panel-w: 260px; }
+    .main-area { position: relative; }
+    /* Center the chat column and cap its width so it matches the composer box.
+       Right panel is in flow → when it opens, main-area shrinks and this column
+       re-centers within the reduced space (adaptive, stays 640px-capped). */
+    .main-scroll { position: relative; z-index: 1; max-width: var(--content-max-width); width: 100%; align-self: center; }
+    .ambient-glow {
+      position: absolute; inset: 0; pointer-events: none; z-index: 0;
+      background: radial-gradient(circle at 50% 50%, var(--color-brand-primary-muted) 0%, transparent 60%);
+    }
+    [data-theme="light"] .ambient-glow { opacity: 0.5; }
+
+    /* Empty states */
+    .empty-state { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; padding: var(--space-12) 0; }
+    .empty-icon { opacity: 0.5; }
+    .empty-text { font-size: var(--font-size-sm); color: var(--color-text-tertiary); font-family: var(--font-sans); margin-top: var(--space-3); line-height: var(--line-height-relaxed); }
+
+    /* Chat input focus highlight */
+    .chat-input {
+      display: flex;
+      flex-direction: column;
+      background: var(--color-bg-tertiary);
+      border: 1px solid var(--color-border-default);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      transition: border-color var(--ease-smooth), box-shadow var(--ease-smooth);
+      box-shadow: var(--shadow-sm);
+    }
+    .chat-input:focus-within { border-color: var(--color-brand-primary); box-shadow: 0 0 0 3px var(--color-brand-primary-soft); }
+
+    /* Composer (ChatGPT-style textarea + toolbar) */
+    .composer-textarea {
+      display: block;
+      width: 100%;
+      min-height: 28px;
+      max-height: 200px;
+      background: transparent;
+      border: none;
+      outline: none;
+      appearance: none;
+      resize: none;
+      color: var(--color-text-primary);
+      font-size: var(--font-size-md);
+      font-family: var(--font-sans);
+      line-height: var(--line-height-normal);
+      padding: var(--space-3) var(--space-4) var(--space-2);
+    }
+    .composer-textarea::placeholder { color: var(--color-text-tertiary); }
+    /* Suppress the textarea's own focus outline: the .chat-input container already
+       shows a focus ring via :focus-within, so a second outline on the textarea
+       would render as a stray highlight line at the text/toolbar boundary. */
+    .composer-textarea:focus,
+    .composer-textarea:focus-visible { outline: none; }
+    .composer-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-2) var(--space-3) var(--space-3);
+      gap: var(--space-2);
+    }
+    .composer-actions-left,
+    .composer-actions-right { display: flex; align-items: center; gap: var(--space-1); }
+    .composer-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-md);
+      border: none;
+      background: transparent;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    .composer-btn:hover { background: var(--color-bg-hover); color: var(--color-text-primary); }
+    .composer-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .composer-btn-text { font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); color: currentColor; }
+    .composer-send {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-full);
+      border: none;
+      background: var(--color-bg-elevated);
+      color: var(--color-text-primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    .composer-send:hover { background: var(--color-brand-primary); color: var(--color-text-inverse); }
+
+    /* Action chip brand hover */
+    .action-chip:hover { background: var(--color-brand-primary-soft); border-color: var(--color-brand-primary); color: var(--color-brand-primary); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--color-border-default); border-radius: var(--radius-full); }
+    ::-webkit-scrollbar-thumb:hover { background: var(--color-border-emphasis); }
+    * { scrollbar-width: thin; scrollbar-color: var(--color-border-default) transparent; }
+
+    /* Focus visibility */
+    :focus-visible { outline: 2px solid var(--color-brand-primary); outline-offset: 2px; }
+
+    /* Search overlay entrance */
+    #search-overlay.visible .search-card { animation: search-card-in 0.25s var(--ease-spring) 0.15s both; }
+    @keyframes search-card-in { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+    <script>document.documentElement.classList.add('js-anim');</script>
+    <!-- iProduct motion utilities — tw-animate-css equivalent, pure CSS (no build step) -->
+    <style>
+      /* Hide staggered elements only when JS is active — no flash, and they stay visible if JS fails */
+      .js-anim .template-card, .js-anim .filter-tag, .js-anim .action-chip, .js-anim .chat-input { opacity: 0; }
+      @keyframes ip-fade-in { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes ip-zoom-in { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
+      @keyframes ip-slide-in-top { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes ip-slide-in-bottom { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes ip-pop { 0% { opacity: 0; transform: scale(0.9); } 60% { opacity: 1; transform: scale(1.04); } 100% { transform: scale(1); } }
+
+      .animate-in { animation-duration: var(--transition-normal); animation-timing-function: var(--ease-smooth); animation-fill-mode: both; }
+      .fade-in { animation-name: ip-fade-in; }
+      .zoom-in { animation-name: ip-zoom-in; }
+      .slide-in-from-top { animation-name: ip-slide-in-top; }
+      .slide-in-from-bottom { animation-name: ip-slide-in-bottom; }
+      .pop-in { animation-name: ip-pop; animation-timing-function: var(--ease-spring); }
+      .duration-fast { animation-duration: var(--transition-fast); }
+      .duration-normal { animation-duration: var(--transition-normal); }
+      .duration-slow { animation-duration: var(--transition-slow); }
+      .ease-spring { animation-timing-function: var(--ease-spring); }
+
+      #toast-container { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); display: flex; flex-direction: column; gap: 10px; z-index: var(--z-toast); pointer-events: none; align-items: center; }
+      .toast { pointer-events: auto; max-width: 420px; padding: 10px 16px; border-radius: var(--radius-full); background: var(--color-bg-elevated); color: var(--color-text-primary); font-family: var(--font-sans); font-size: var(--font-size-sm); border: 1px solid var(--color-border-default); box-shadow: var(--shadow-float); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+
+      .composer-send:active, .card-more-btn:active, .action-chip:active, .filter-tag:active { transform: scale(0.96); }
+      .card-more-btn, .filter-tag, .action-chip { transition: transform 0.15s var(--ease-spring), background 0.2s var(--ease-spring), color 0.2s var(--ease-spring), border-color 0.2s var(--ease-spring); }
+
+      @media (prefers-reduced-motion: reduce) {
+        .js-anim .template-card, .js-anim .filter-tag, .js-anim .action-chip, .js-anim .chat-input { opacity: 1 !important; }
+        *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased" style="margin:0;overflow:hidden;">
+    <main>
+    <!-- ==================== PLAYBOOK BOM BUILDER SHELL ==================== -->
+    <div style="display:flex;height:100vh;overflow:hidden;">
+
+      <!-- ===== BODY: Sidebar + Main ===== -->
+      <div style="display:flex;flex:1;overflow:hidden;position:relative;">
+
+        <!-- ===== 2. LEFT SIDEBAR (260px) ===== -->
+        <aside id="left-sidebar" style="width:260px;min-width:260px;background:var(--color-bg-secondary);border-right:1px solid var(--color-border-default);display:flex;flex-direction:column;overflow:hidden;">
+          <div style="padding:var(--space-3) var(--space-4);display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-3);border-bottom:1px solid var(--color-border-subtle);">
+            <div style="display:flex;flex-direction:column;gap:4px;min-width:0;">
+              <div style="display:flex;align-items:center;gap:9px;white-space:nowrap;">
+                <span style="font-size:var(--font-size-lg);font-weight:var(--font-weight-medium);letter-spacing:-0.02em;line-height:1;user-select:none;color:var(--color-text-primary);"><span style="color:var(--color-brand-primary);">i</span>Product</span>
+                <span style="font-family:var(--font-mono);font-size:var(--font-size-xs);font-weight:var(--font-weight-medium);color:var(--color-brand-primary);border:1px solid var(--color-border-default);border-radius:6px;padding:2px 7px;line-height:1;">2.0</span>
+              </div>
+              <span style="font-size:11px;font-weight:var(--font-weight-normal);color:var(--color-text-tertiary);letter-spacing:0.2px;line-height:1;white-space:nowrap;">Product Release Workspace</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:var(--space-2);">
+              <button id="sidebar-search-btn" onclick="openSearchOverlay()" class="btn-quiet" title="搜索">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              </button>
+              <button onclick="toggleSidebar()" class="btn-quiet" title="收起侧栏">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+              </button>
+            </div>
+          </div>
+          <!-- Mode Navigation — Vertical Button List -->
+          <div style="padding:var(--space-1) var(--space-2);border-bottom:1px solid var(--color-border-subtle);display:flex;flex-direction:column;gap:2px;">
+            <button class="mode-tab">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  <span>New Chat</span>
+</button>
+            <button class="mode-tab active">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+              <span>Playbook</span>
+            </button>
+            <button class="mode-tab">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+              <span>Canvas</span>
+            </button>
+          </div>
+
+          <!-- Category: 我的执行 -->
+          <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+            <div style="font-size:var(--font-size-xs);font-weight:var(--font-weight-semibold);color:var(--color-text-tertiary);padding:var(--space-2) var(--space-3);letter-spacing:0.8px;text-transform:uppercase;">
+  我的执行
+</div>
+            <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;" class="no-scrollbar">
+
+              <!-- 未命名任务 (Playbook, selected) -->
+              <div class="sidebar-item selected">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <div style="display:flex;align-items:center;gap:var(--space-2);min-width:0;flex:1;">
+                    <div style="position:relative;width:14px;height:14px;flex-shrink:0;">
+                      <svg class="card-type-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                      <button class="card-more-btn" onclick="toggleCardMenu(this, event)" aria-label="更多操作">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+                      </button>
+                    </div>
+                    <div class="card-dropdown">
+                      <div class="dropdown-item" onclick="this.closest('.card-dropdown').style.display='none'">重命名</div>
+                      <div class="dropdown-item danger" onclick="this.closest('.card-dropdown').style.display='none'">删除</div>
+                    </div>
+                    <span style="font-size:var(--font-size-sm);font-weight:var(--font-weight-medium);color:var(--color-text-primary);font-family:var(--font-sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">未命名任务</span>
+                  </div>
+                  <div style="flex-shrink:0;margin-left:var(--space-2);">
+                    <div style="display:flex;align-items:center;gap:4px;">
+                      <span style="width:6px;height:6px;border-radius:50%;background:var(--state-success);flex-shrink:0;"></span>
+                      <span style="font-size:var(--font-size-xs);color:var(--state-success);font-family:var(--font-sans);">进行中</span>
+                    </div>
+                  </div>
+                </div>
+                <div style="font-size:var(--font-size-xs);color:var(--color-text-tertiary);font-family:var(--font-sans);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Tablet Super BOM Builder</div>
+              </div>
+
+              <!-- Q3 营收数据分析 (Chat, unselected) -->
+              <div class="sidebar-item">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <div style="display:flex;align-items:center;gap:var(--space-2);min-width:0;flex:1;">
+                    <div style="position:relative;width:14px;height:14px;flex-shrink:0;">
+                      <svg class="card-type-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                      <button class="card-more-btn" onclick="toggleCardMenu(this, event)" aria-label="更多操作">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+                      </button>
+                    </div>
+                    <div class="card-dropdown">
+                      <div class="dropdown-item" onclick="this.closest('.card-dropdown').style.display='none'">重命名</div>
+                      <div class="dropdown-item danger" onclick="this.closest('.card-dropdown').style.display='none'">删除</div>
+                    </div>
+                    <span style="font-size:var(--font-size-sm);font-weight:var(--font-weight-medium);color:var(--color-text-primary);font-family:var(--font-sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Q3 营收数据分析</span>
+                  </div>
+                  <div style="flex-shrink:0;margin-left:var(--space-2);">
+                    <span style="font-size:10px;color:var(--color-text-tertiary);">14:32</span>
+                  </div>
+                </div>
+                <div style="font-size:var(--font-size-xs);color:var(--color-text-tertiary);font-family:var(--font-sans);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">帮我分析一下 Q3 各产品线的营收数据</div>
+              </div>
+
+              <!-- TRD 建模分析 (Playbook, unselected) -->
+              <div class="sidebar-item">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <div style="display:flex;align-items:center;gap:var(--space-2);min-width:0;flex:1;">
+                    <div style="position:relative;width:14px;height:14px;flex-shrink:0;">
+                      <svg class="card-type-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                      <button class="card-more-btn" onclick="toggleCardMenu(this, event)" aria-label="更多操作">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+                      </button>
+                    </div>
+                    <div class="card-dropdown">
+                      <div class="dropdown-item" onclick="this.closest('.card-dropdown').style.display='none'">重命名</div>
+                      <div class="dropdown-item danger" onclick="this.closest('.card-dropdown').style.display='none'">删除</div>
+                    </div>
+                    <span style="font-size:var(--font-size-sm);font-weight:var(--font-weight-medium);color:var(--color-text-primary);font-family:var(--font-sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">TRD 建模分析</span>
+                  </div>
+                  <div style="flex-shrink:0;margin-left:var(--space-2);">
+                    <span style="font-size:10px;color:var(--color-text-tertiary);">11:05</span>
+                  </div>
+                </div>
+                <div style="font-size:var(--font-size-xs);color:var(--color-text-tertiary);font-family:var(--font-sans);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">技术需求文档自动生成与评审</div>
+              </div>
+
+              <!-- 用户流失原因排查 (Chat, unselected) -->
+              <div class="sidebar-item">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <div style="display:flex;align-items:center;gap:var(--space-2);min-width:0;flex:1;">
+                    <div style="position:relative;width:14px;height:14px;flex-shrink:0;">
+                      <svg class="card-type-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                      <button class="card-more-btn" onclick="toggleCardMenu(this, event)" aria-label="更多操作">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+                      </button>
+                    </div>
+                    <div class="card-dropdown">
+                      <div class="dropdown-item" onclick="this.closest('.card-dropdown').style.display='none'">重命名</div>
+                      <div class="dropdown-item danger" onclick="this.closest('.card-dropdown').style.display='none'">删除</div>
+                    </div>
+                    <span style="font-size:var(--font-size-sm);font-weight:var(--font-weight-medium);color:var(--color-text-primary);font-family:var(--font-sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">用户流失原因排查</span>
+                  </div>
+                  <div style="flex-shrink:0;margin-left:var(--space-2);">
+                    <span style="font-size:10px;color:var(--color-text-tertiary);">09:48</span>
+                  </div>
+                </div>
+                <div style="font-size:var(--font-size-xs);color:var(--color-text-tertiary);font-family:var(--font-sans);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">近30天流失用户画像分析与关键因素</div>
+              </div>
+
+              <!-- 周报自动生成 (Playbook, unselected, paused) -->
+              <div class="sidebar-item">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <div style="display:flex;align-items:center;gap:var(--space-2);min-width:0;flex:1;">
+                    <div style="position:relative;width:14px;height:14px;flex-shrink:0;">
+                      <svg class="card-type-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                      <button class="card-more-btn" onclick="toggleCardMenu(this, event)" aria-label="更多操作">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+                      </button>
+                    </div>
+                    <div class="card-dropdown">
+                      <div class="dropdown-item" onclick="this.closest('.card-dropdown').style.display='none'">重命名</div>
+                      <div class="dropdown-item danger" onclick="this.closest('.card-dropdown').style.display='none'">删除</div>
+                    </div>
+                    <span style="font-size:var(--font-size-sm);font-weight:var(--font-weight-medium);color:var(--color-text-primary);font-family:var(--font-sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">周报自动生成</span>
+                  </div>
+                  <div style="flex-shrink:0;margin-left:var(--space-2);">
+                    <div style="display:flex;align-items:center;gap:4px;">
+                      <span style="width:6px;height:6px;border-radius:50%;background:var(--state-warning);flex-shrink:0;"></span>
+                      <span style="font-size:var(--font-size-xs);color:var(--state-warning);font-family:var(--font-sans);">已暂停</span>
+                    </div>
+                  </div>
+                </div>
+                <div style="font-size:var(--font-size-xs);color:var(--color-text-tertiary);font-family:var(--font-sans);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">汇总本周项目进展与关键指标</div>
+              </div>
+
+              <!-- 竞品分析报告 (Playbook, unselected) -->
+              <div class="sidebar-item">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <div style="display:flex;align-items:center;gap:var(--space-2);min-width:0;flex:1;">
+                    <div style="position:relative;width:14px;height:14px;flex-shrink:0;">
+                      <svg class="card-type-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                      <button class="card-more-btn" onclick="toggleCardMenu(this, event)" aria-label="更多操作">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+                      </button>
+                    </div>
+                    <div class="card-dropdown">
+                      <div class="dropdown-item" onclick="this.closest('.card-dropdown').style.display='none'">重命名</div>
+                      <div class="dropdown-item danger" onclick="this.closest('.card-dropdown').style.display='none'">删除</div>
+                    </div>
+                    <span style="font-size:var(--font-size-sm);font-weight:var(--font-weight-medium);color:var(--color-text-primary);font-family:var(--font-sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">竞品分析报告</span>
+                  </div>
+                  <div style="flex-shrink:0;margin-left:var(--space-2);">
+                    <span style="font-size:10px;color:var(--color-text-tertiary);">08:20</span>
+                  </div>
+                </div>
+                <div style="font-size:var(--font-size-xs);color:var(--color-text-tertiary);font-family:var(--font-sans);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">竞品功能对比与差异化分析</div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Bottom: User Actions -->
+          <div style="border-top:1px solid var(--color-border-subtle);padding:var(--space-3) var(--space-4);display:flex;align-items:center;gap:var(--space-3);">
+            <!-- User Avatar + Name -->
+            <div style="display:flex;align-items:center;gap:var(--space-3);flex:1;min-width:0;">
+              <div style="width:28px;height:28px;border-radius:var(--radius-full);background:var(--color-brand-primary-muted);color:var(--color-brand-primary);display:flex;align-items:center;justify-content:center;font-size:var(--font-size-xs);font-weight:var(--font-weight-semibold);font-family:var(--font-sans);user-select:none;flex-shrink:0;">PM</div>
+              <span style="font-size:var(--font-size-sm);color:var(--color-text-secondary);font-family:var(--font-sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">产品经理</span>
+            </div>
+            <!-- Theme Toggle -->
+            <button id="theme-toggle" title="切换主题" class="btn-quiet">
+              <svg id="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+              <svg id="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            </button>
+            <!-- Settings Gear -->
+            <button class="btn-quiet" title="设置">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
+          </div>
+        </aside>
+
+        <!-- ===== 3. MAIN CONTENT AREA ===== -->
+        <div class="main-area" style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--color-bg-primary);position:relative;">
+          <div class="ambient-glow"></div>
+          <!-- Collapsed sidebar toolbar (visible when sidebar is closed) -->
+          <div id="collapsed-toolbar" style="position:relative;padding:var(--space-3) var(--space-4);padding-right:56px;display:none;align-items:center;gap:var(--space-2);background:var(--color-bg-primary);z-index:var(--z-sticky);">
+  <!-- Text Logo (方案 D：仅 i 染品牌色，Product 墨色，含 2.0 版本胶囊) -->
+  <span style="font-size:var(--font-size-lg);font-weight:var(--font-weight-medium);letter-spacing:-0.02em;line-height:1;user-select:none;margin-right:var(--space-2);color:var(--color-text-primary);"><span style="color:var(--color-brand-primary);">i</span>Product</span>
+  <span style="font-family:var(--font-mono);font-size:var(--font-size-xs);font-weight:var(--font-weight-medium);color:var(--color-brand-primary);border:1px solid var(--color-border-default);border-radius:6px;padding:2px 7px;line-height:1;margin-right:var(--space-2);">2.0</span>
+  <button onclick="toggleSidebar()" class="btn-quiet" title="展开侧栏">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+  </button>
+  <button onclick="openSearchOverlay()" class="btn-quiet" title="搜索">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+  </button>
+  <button class="btn-quiet" title="New Chat">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  </button>
+</div>
+          <!-- Right Panel Open Button (top-right corner, subtle icon) -->
+          <button id="right-panel-toggle" title="切换面板" class="btn-quiet btn-lg" style="position:absolute;right:10px;top:10px;z-index:var(--z-sticky);" onclick="document.getElementById('right-panel').classList.toggle('panel-closed')">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+            </button>
+
+          <!-- Centered Content: Title + Description + Input + Actions -->
+          <div class="main-scroll" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:var(--space-8) var(--space-6);">
+
+            <!-- Brand Title -->
+            <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-6);">
+              <div style="width:36px;height:36px;border-radius:var(--radius-md);background:var(--color-brand-primary-muted);display:flex;align-items:center;justify-content:center;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-brand-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+              </div>
+              <span style="font-size:var(--font-size-xl);font-weight:var(--font-weight-semibold);color:var(--color-text-primary);font-family:var(--font-sans);">Tablet Super BOM Builder</span>
+            </div>
+
+            <!-- Subtitle / Description -->
+            <div style="font-size:var(--font-size-sm);color:var(--color-text-tertiary);font-family:var(--font-sans);margin-bottom:var(--space-8);max-width:100%;text-align:center;line-height:var(--line-height-relaxed);">
+              帮你完成 OD 文件的解析、物料文件编写、MBG PLM文档创建等工作，输出专业级工作成果。
+            </div>
+
+            <!-- Input Box -->
+            <div style="width:100%;">
+              <div class="chat-input">
+                <textarea class="composer-textarea" id="composer-input" rows="1" placeholder="描述你的需求，或输入 / 选择技能..."></textarea>
+                <div class="composer-toolbar">
+                  <div class="composer-actions-left">
+                    <button class="composer-btn" type="button" title="上传文件" aria-label="上传文件">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                    </button>
+                    <button class="composer-btn" type="button" title="语音输入" aria-label="语音输入">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                    </button>
+                  </div>
+                  <div class="composer-actions-right">
+                    <button class="composer-send" type="button" title="发送" aria-label="发送">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Hint -->
+              <div style="display:flex;align-items:center;justify-content:center;margin-top:var(--space-2);">
+                <span style="font-size:var(--font-size-xs);color:var(--color-text-tertiary);font-family:var(--font-sans);">Shift+Enter 换行 · 输入 / 选择技能</span>
+              </div>
+            </div>
+
+            <!-- Quick Action Buttons -->
+            <div style="display:flex;gap:var(--space-3);margin-top:var(--space-6);flex-wrap:wrap;justify-content:center;">
+              <button class="action-chip" style="display:inline-flex;align-items:center;gap:8px;padding:var(--space-2) var(--space-4);border-radius:var(--radius-full);border:1px solid var(--color-border-default);background:var(--color-bg-elevated);color:var(--color-text-secondary);font-size:var(--font-size-sm);font-family:var(--font-sans);cursor:pointer;transition:all var(--transition-fast);box-shadow:var(--shadow-sm);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                上传OD文件
+              </button>
+              <button class="action-chip" style="display:inline-flex;align-items:center;gap:8px;padding:var(--space-2) var(--space-4);border-radius:var(--radius-full);border:1px solid var(--color-border-default);background:var(--color-bg-elevated);color:var(--color-text-secondary);font-size:var(--font-size-sm);font-family:var(--font-sans);cursor:pointer;transition:all var(--transition-fast);box-shadow:var(--shadow-sm);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                查看技能列表
+              </button>
+              <button class="action-chip" style="display:inline-flex;align-items:center;gap:8px;padding:var(--space-2) var(--space-4);border-radius:var(--radius-full);border:1px solid var(--color-border-default);background:var(--color-bg-elevated);color:var(--color-text-secondary);font-size:var(--font-size-sm);font-family:var(--font-sans);cursor:pointer;transition:all var(--transition-fast);box-shadow:var(--shadow-sm);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                使用帮助
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- ===== 4. RIGHT PANEL ===== -->
+        <div id="right-panel" class="panel-closed" style="background:var(--color-bg-secondary);border-left:1px solid var(--color-border-default);display:flex;flex-direction:column;overflow:hidden;">
+
+          <!-- Accordion: 三个区块直上直下, 标题行始终可见, 展开的区块flex:1撑满 -->
+          <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;" class="no-scrollbar">
+
+            <!-- 技能池 (default expanded) -->
+            <div class="panel-section-wrapper" data-section="section-skills" style="display:flex;flex-direction:column;flex:1;min-height:0;">
+              <div class="panel-section-header" style="padding:var(--space-3) var(--space-4);display:flex;align-items:center;cursor:pointer;transition:background var(--transition-fast);flex-shrink:0;border-bottom:1px solid var(--color-border-subtle);" onclick="togglePanelSection('section-skills')">
+                <span style="font-size:var(--font-size-xs);font-weight:var(--font-weight-semibold);color:var(--color-text-tertiary);letter-spacing:0.5px;text-transform:uppercase;flex:1;">技能池</span>
+                <span style="font-size:var(--font-size-xs);color:var(--color-text-tertiary);margin-right:var(--space-2);">(0)</span>
+                <svg id="section-skills-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-tertiary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;transition:transform 0.2s ease;"><polyline points="6 9 12 6 18 9"/></svg>
+              </div>
+              <div id="section-skills" class="panel-section-content" style="flex:1;overflow-y:auto;min-height:0;">
+                <div style="padding:var(--space-6) var(--space-4);display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80px;">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-tertiary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.5;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                  <span style="font-size:var(--font-size-xs);color:var(--color-text-tertiary);font-family:var(--font-sans);margin-top:var(--space-2);text-align:center;line-height:var(--line-height-normal);">执行技能后<br>状态将在此显示</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 文件 (default collapsed) -->
+            <div class="panel-section-wrapper" data-section="section-files" style="display:flex;flex-direction:column;flex:0 0 auto;min-height:0;">
+              <div class="panel-section-header" style="padding:var(--space-3) var(--space-4);display:flex;align-items:center;cursor:pointer;transition:background var(--transition-fast);flex-shrink:0;border-bottom:1px solid var(--color-border-subtle);" onclick="togglePanelSection('section-files')">
+                <span style="font-size:var(--font-size-xs);font-weight:var(--font-weight-semibold);color:var(--color-text-tertiary);letter-spacing:0.5px;text-transform:uppercase;flex:1;">文件</span>
+                <span style="font-size:var(--font-size-xs);color:var(--color-text-tertiary);margin-right:var(--space-2);">(0)</span>
+                <svg id="section-files-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-tertiary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;transition:transform 0.2s ease;transform:rotate(-90deg);"><polyline points="6 9 12 6 18 9"/></svg>
+              </div>
+              <div id="section-files" class="panel-section-content" style="max-height:0;overflow:hidden;">
+                <div style="padding:var(--space-6) var(--space-4);display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80px;">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-tertiary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.5;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <span style="font-size:var(--font-size-xs);color:var(--color-text-tertiary);font-family:var(--font-sans);margin-top:var(--space-2);text-align:center;">暂无文件</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 链接 (default collapsed) -->
+            <div class="panel-section-wrapper" data-section="section-links" style="display:flex;flex-direction:column;flex:0 0 auto;min-height:0;">
+              <div class="panel-section-header" style="padding:var(--space-3) var(--space-4);display:flex;align-items:center;cursor:pointer;transition:background var(--transition-fast);flex-shrink:0;border-bottom:1px solid var(--color-border-subtle);" onclick="togglePanelSection('section-links')">
+                <span style="font-size:var(--font-size-xs);font-weight:var(--font-weight-semibold);color:var(--color-text-tertiary);letter-spacing:0.5px;text-transform:uppercase;flex:1;">链接</span>
+                <span style="font-size:var(--font-size-xs);color:var(--color-text-tertiary);margin-right:var(--space-2);">(0)</span>
+                <svg id="section-links-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-tertiary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;transition:transform 0.2s ease;transform:rotate(-90deg);"><polyline points="6 9 12 6 18 9"/></svg>
+              </div>
+              <div id="section-links" class="panel-section-content" style="max-height:0;overflow:hidden;">
+                <div style="padding:var(--space-6) var(--space-4);display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80px;">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-tertiary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.5;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                  <span style="font-size:var(--font-size-xs);color:var(--color-text-tertiary);font-family:var(--font-sans);margin-top:var(--space-2);text-align:center;">暂无链接</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div><!-- end BODY: Sidebar + Main -->
+
+      <!-- Search Overlay -->
+      <div id="search-overlay" onclick="if(event.target===this)closeSearchOverlay()" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:var(--z-overlay);align-items:flex-start;justify-content:center;padding-top:80px;">
+        <div class="search-card" style="width:560px;max-width:90vw;background:var(--color-bg-secondary);border:1px solid var(--color-border-default);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-float);" onclick="event.stopPropagation()">
+          <!-- Search input -->
+          <div style="padding:var(--space-4);border-bottom:1px solid var(--color-border-subtle);display:flex;align-items:center;gap:var(--space-3);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-tertiary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input id="search-overlay-input" type="text" placeholder="搜索执行..." style="flex:1;border:none;background:transparent;color:var(--color-text-primary);font-size:var(--font-size-md);font-family:var(--font-sans);outline:none;" oninput="filterSearchOverlay()" />
+            <span style="font-size:var(--font-size-xs);color:var(--color-text-tertiary);font-family:var(--font-sans);white-space:nowrap;">ESC 关闭</span>
+          </div>
+          <!-- Quick access: recent items -->
+          <div id="search-overlay-results" style="padding:var(--space-2);">
+            <div style="font-size:var(--font-size-xs);font-weight:var(--font-weight-semibold);color:var(--color-text-tertiary);padding:var(--space-2) var(--space-3);letter-spacing:0.5px;text-transform:uppercase;">最近使用</div>
+            <div class="search-result-item" style="padding:var(--space-3);display:flex;align-items:center;gap:var(--space-3);cursor:pointer;border-radius:var(--radius-sm);transition:background var(--transition-fast);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-tertiary)" stroke-width="2" style="flex-shrink:0;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:var(--font-size-sm);font-weight:var(--font-weight-medium);color:var(--color-text-primary);font-family:var(--font-sans);">未命名任务</div>
+                <div style="font-size:var(--font-size-xs);color:var(--color-text-tertiary);font-family:var(--font-sans);">Playbook · Tablet Super BOM Builder</div>
+              </div>
+              <span style="width:6px;height:6px;border-radius:50%;background:var(--state-success);flex-shrink:0;"></span>
+            </div>
+            <div class="search-result-item" style="padding:var(--space-3);display:flex;align-items:center;gap:var(--space-3);cursor:pointer;border-radius:var(--radius-sm);transition:background var(--transition-fast);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-tertiary)" stroke-width="2" style="flex-shrink:0;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:var(--font-size-sm);font-weight:var(--font-weight-medium);color:var(--color-text-primary);font-family:var(--font-sans);">Q3 营收数据分析</div>
+                <div style="font-size:var(--font-size-xs);color:var(--color-text-tertiary);font-family:var(--font-sans);">Chat · 帮我分析一下 Q3 各产品线</div>
+              </div>
+              <span style="font-size:var(--font-size-xs);color:var(--color-text-tertiary);">14:32</span>
+            </div>
+            <div class="search-result-item" style="padding:var(--space-3);display:flex;align-items:center;gap:var(--space-3);cursor:pointer;border-radius:var(--radius-sm);transition:background var(--transition-fast);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-tertiary)" stroke-width="2" style="flex-shrink:0;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:var(--font-size-sm);font-weight:var(--font-weight-medium);color:var(--color-text-primary);font-family:var(--font-sans);">TRD 建模分析</div>
+                <div style="font-size:var(--font-size-xs);color:var(--color-text-tertiary);font-family:var(--font-sans);">Playbook · 技术需求文档</div>
+              </div>
+              <span style="font-size:var(--font-size-xs);color:var(--color-text-tertiary);">11:05</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end SHELL -->
+
+    </main>
+
+    <!-- Theme Toggle Script (Linear: light default, dark via [data-theme="dark"]) -->
+    <script>
+    (function() {
+      const toggle = document.getElementById('theme-toggle');
+      const iconMoon = document.getElementById('icon-moon');
+      const iconSun = document.getElementById('icon-sun');
+      const saved = localStorage.getItem('iproduct-theme');
+      if (saved === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        iconMoon.style.display = 'block';
+        iconSun.style.display = 'none';
+      } else {
+        // Light is the default (no attribute on <html>)
+        document.documentElement.removeAttribute('data-theme');
+        iconMoon.style.display = 'none';
+        iconSun.style.display = 'block';
+      }
+      toggle.addEventListener('click', function() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        if (isDark) {
+          document.documentElement.removeAttribute('data-theme');
+          localStorage.setItem('iproduct-theme', 'light');
+          iconMoon.style.display = 'none';
+          iconSun.style.display = 'block';
+        } else {
+          document.documentElement.setAttribute('data-theme', 'dark');
+          localStorage.setItem('iproduct-theme', 'dark');
+          iconMoon.style.display = 'block';
+          iconSun.style.display = 'none';
+        }
+      });
+    })();
+    </script>
+    <script>
+    function toggleCardMenu(btn, e) {
+      e.stopPropagation();
+      var menu = btn.closest('.card-dropdown');
+      if (!menu) {
+        var parent = btn.closest('div[style*="display:flex;align-items:center;gap:var(--space-2);min-width:0;flex:1;"]');
+        menu = parent ? parent.querySelector('.card-dropdown') : null;
+      }
+      var allMenus = document.querySelectorAll('.card-dropdown');
+      allMenus.forEach(function(m) { if (m !== menu) m.style.display = 'none'; });
+      if (menu) {
+        var isHidden = window.getComputedStyle(menu).display === 'none';
+        menu.style.display = isHidden ? 'block' : 'none';
+      }
+    }
+    document.addEventListener('click', function() {
+      document.querySelectorAll('.card-dropdown').forEach(function(m) { m.style.display = 'none'; });
+    });
+
+    var panelSections = ['section-skills', 'section-files', 'section-links'];
+    function togglePanelSection(sectionId) {
+      var wrapper = document.querySelector('.panel-section-wrapper[data-section="' + sectionId + '"]');
+      var content = document.getElementById(sectionId);
+      var arrow = document.getElementById(sectionId + '-arrow');
+      if (!wrapper || !content || !arrow) return;
+
+      var isExpanded = wrapper.style.flex === '1';
+
+      if (isExpanded) {
+        // Collapse this section
+        wrapper.style.flex = '0 0 auto';
+        content.style.flex = '0';
+        content.style.overflow = 'hidden';
+        content.style.maxHeight = '0';
+        arrow.style.transform = 'rotate(-90deg)';
+      } else {
+        // Collapse all others first
+        panelSections.forEach(function(id) {
+          if (id !== sectionId) {
+            var otherWrapper = document.querySelector('.panel-section-wrapper[data-section="' + id + '"]');
+            var otherContent = document.getElementById(id);
+            var otherArrow = document.getElementById(id + '-arrow');
+            if (otherWrapper && otherContent && otherArrow) {
+              otherWrapper.style.flex = '0 0 auto';
+              otherContent.style.flex = '0';
+              otherContent.style.overflow = 'hidden';
+              otherContent.style.maxHeight = '0';
+              otherArrow.style.transform = 'rotate(-90deg)';
+            }
+          }
+        });
+        // Expand this section
+        wrapper.style.flex = '1';
+        content.style.flex = '1';
+        content.style.overflow = 'auto';
+        content.style.maxHeight = '';
+        arrow.style.transform = 'rotate(0deg)';
+      }
+    }
+
+    // Sidebar toggle
+    function toggleSidebar() {
+      var sidebar = document.getElementById('left-sidebar');
+      var toolbar = document.getElementById('collapsed-toolbar');
+      if (sidebar.classList.contains('sidebar-closed')) {
+        // Opening
+        toolbar.classList.remove('visible');
+        toolbar.style.display = 'none';
+        sidebar.classList.remove('sidebar-closed');
+        sidebar.style.width = '260px';
+        sidebar.style.minWidth = '260px';
+      } else {
+        // Closing
+        sidebar.classList.add('sidebar-closed');
+        sidebar.style.width = '0';
+        sidebar.style.minWidth = '0';
+        toolbar.style.display = 'flex';
+        requestAnimationFrame(function() { toolbar.classList.add('visible'); });
+      }
+    }
+
+    // Composer auto-resize + Enter to send
+    (function() {
+      var textarea = document.getElementById('composer-input');
+      if (!textarea) return;
+      function resize() {
+        textarea.style.height = 'auto';
+        textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
+      }
+      textarea.addEventListener('input', resize);
+      textarea.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          // TODO: wire send action
+        }
+      });
+      resize();
+    })();
+
+    // Search overlay
+    function openSearchOverlay() {
+      var overlay = document.getElementById('search-overlay');
+      overlay.style.display = 'flex';
+      setTimeout(function() { overlay.classList.add('visible'); }, 10);
+      setTimeout(function() { document.getElementById('search-overlay-input').focus(); }, 100);
+    }
+    function closeSearchOverlay() {
+      var overlay = document.getElementById('search-overlay');
+      overlay.classList.remove('visible');
+      setTimeout(function() { overlay.style.display = 'none'; }, 150);
+      document.getElementById('search-overlay-input').value = '';
+    }
+    function filterSearchOverlay() {
+      var query = document.getElementById('search-overlay-input').value.toLowerCase();
+      var items = document.querySelectorAll('.search-result-item');
+      items.forEach(function(item) {
+        var text = item.textContent.toLowerCase();
+        item.style.display = !query || text.indexOf(query) !== -1 ? '' : 'none';
+      });
+    }
+    // ESC to close search
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeSearchOverlay();
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openSearchOverlay(); }
+    });
+    </script>
+    <script>lucide.createIcons();</script>
+    <script src="motion.js"></script>
+</body>
+</html>
