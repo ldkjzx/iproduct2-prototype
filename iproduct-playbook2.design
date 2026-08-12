@@ -1,0 +1,44 @@
+{
+  "data": [
+    {
+      "id": "page-playbook-bom-init",
+      "title": "BOM Builder 初始状态",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1752364800000,
+      "canvasData": {
+        "x": 0,
+        "y": 0,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/playbook-bom-init.html",
+        "interactions": []
+      }
+    },
+    {
+      "id": "page-playbook-landing",
+      "title": "Playbook Landing Page",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1784254800000,
+      "canvasData": {
+        "x": 620,
+        "y": 0,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/playbook-landing.html",
+        "interactions": []
+      }
+    }
+  ],
+  "config": {
+    "autoLayout": true,
+    "deviceType": "desktop",
+    "projectName": "iProduct Playbook2",
+    "designLibrary": null,
+    "showEdge": false,
+    "visualEditorEnabled": false
+  }
+}
